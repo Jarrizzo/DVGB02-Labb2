@@ -1,3 +1,6 @@
+
+//Host_A.c
+
 #include "Sim_Engine.h"
 #include "Host_A.h"
 #include <stdbool.h>
@@ -6,11 +9,11 @@
 #define A 0
 #define B 1
 
-struct pkt pkt_A;
-struct msg Q[MAXSIZE];
-float waitingTime;
-bool isSending;
-int Qsize = 0;
+static struct pkt pkt_A;
+static struct msg Q[MAXSIZE];
+static float waitingTime;
+static bool isSending;
+static int Qsize = 0;
 
 void push(struct msg message);
 struct msg pop();
@@ -24,7 +27,7 @@ void A_output( struct msg message) {
     push(message);
     return;
   }
-  printf("A_out: %s\n", message.data);
+  //printf("A_out: %s\n", message.data);
 
   memcpy(pkt_A.payload,message.data,sizeof(message.data));
   pkt_A.checksum = checksumA(message);
@@ -33,7 +36,7 @@ void A_output( struct msg message) {
   else
     pkt_A.seqnum = 0;
 
-  printf("Pkt_A sequense number: %d\n",pkt_A.seqnum);
+  //printf("Pkt_A sequense number: %d\n",pkt_A.seqnum);
 
   isSending = true;
   tolayer3(A, pkt_A);
@@ -43,17 +46,18 @@ void A_output( struct msg message) {
 /* Called from layer 3, when a packet arrives for layer 4 */
 void A_input(struct pkt pkt_B) {
 
-  printf("A_input: -- ACK: %d\n",pkt_B.acknum);
+  //printf("A_input: -- ACK: %d\n",pkt_B.acknum);
   stoptimer(A);
 
   if(pkt_B.acknum == pkt_A.seqnum || pkt_B.checksum == get_checksum(pkt_B)){
+    //printf("\n\n\n\n\pkt_B.checksum : %d\nget_checksum(pkt_B) : %d\npkt_B.acknum: %d\npkt_A.seqnum: %d\n\n\n\n\n",pkt_B.checksum,get_checksum(pkt_B),pkt_B.acknum,pkt_A.seqnum);
     isSending = false;
     if(Qsize != 0){
       A_output(pop());
     }
   }
   else if(pkt_B.acknum != pkt_A.seqnum || pkt_B.checksum != get_checksum(pkt_B)){
-    printf("A_input: -- Packet corrupted -- resending packet...\nPayload: %s\n",pkt_A.payload);
+    //printf("A_input: -- Packet corrupted -- resending packet...\nPayload: %s\n",pkt_A.payload);
     tolayer3(A,pkt_A);
     starttimer(A,waitingTime);
   }
@@ -61,7 +65,7 @@ void A_input(struct pkt pkt_B) {
 
 /* Called when A's timer goes off */
 void A_timerinterrupt() {
-  printf("TIMEINTERUP! -- Resending the packetnumber: %d --\n",pkt_A.seqnum);
+  //printf("TIMEINTERUP! -- Resending the packetnumber: %d --\n",pkt_A.seqnum);
   tolayer3(A,pkt_A);
   starttimer(A,waitingTime);
 }  
@@ -97,7 +101,6 @@ int checksumA(struct msg message){
   for(int i = 0; i < strlen(message.data); i++){
     sum += message.data[i];
   }
-
   return sum;
 }
 int get_checksum(struct pkt packet){

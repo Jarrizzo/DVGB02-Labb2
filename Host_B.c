@@ -1,3 +1,6 @@
+
+//Host_B.c
+
 #include "Sim_Engine.h"
 #include <stdbool.h>
 #include <string.h>
@@ -7,52 +10,52 @@
 #define B 1
 int prevSeq;
 
-bool isCorrupted(struct pkt packet);
+bool isCorrupted(struct pkt pkt_A);
 
 /* Called from layer 5, passed the data to be sent to other side */
 void B_output( struct msg message) {
   /* DON'T IMPLEMENT */
 }
 
-/* Called from layer 3, when a packet arrives for layer 4 */
-void B_input(struct pkt packet) {
+/* Called from layer 3, when a pkt_A arrives for layer 4 */
+void B_input(struct pkt pkt_A) {
 
-  printf("B_input: %s\n",packet.payload);
+  //printf("B_input: %s\n",pkt_A.payload);
 
-  if(packet.seqnum == 0){
-    if(isCorrupted(packet)){
-      packet.acknum = 1;
-      printf("Packet is corrupted -- Sending ACK %d",packet.acknum);
-      tolayer3(B, packet);
+  if(pkt_A.seqnum == 0){
+    if(isCorrupted(pkt_A)){
+      pkt_A.acknum = 1;
+      //printf("Packet is corrupted -- Sending ACK %d",pkt_A.acknum);
+      tolayer3(B, pkt_A);
     }
     else{
-      packet.acknum = 0;
-      if(packet.seqnum == prevSeq){
-        printf("Packet is a duplicate, throwing packet\n");
+      pkt_A.acknum = 0;
+      if(pkt_A.seqnum == prevSeq){
+        //printf("Packet is a duplicate, throwing pkt_A\n");
       }
       else{
-        tolayer5(B,packet.payload);
-        prevSeq = packet.seqnum;
+        tolayer5(B,pkt_A.payload);
+        prevSeq = pkt_A.seqnum;
       }
-      tolayer3(B,packet);
+      tolayer3(B,pkt_A);
     }
   }
   else{
-    if(isCorrupted(packet)){
-      packet.acknum = 0;
-      printf("Packet is corrupted -- Sending ACK %d",packet.acknum);
-      tolayer3(B,packet);
+    if(isCorrupted(pkt_A)){
+      pkt_A.acknum = 0;
+      //printf("Packet is corrupted -- Sending ACK %d\n",pkt_A.acknum);
+      tolayer3(B,pkt_A);
     }
     else{
-      packet.acknum = 1;
-      if(packet.seqnum == prevSeq){
-        printf("Packet is a duplicate, throwing packet\n");
+      pkt_A.acknum = 1;
+      if(pkt_A.seqnum == prevSeq){
+        //printf("Packet is a duplicate, throwing pkt_A\n");
       }
       else{
-        tolayer5(B,packet.payload);
-        prevSeq = packet.seqnum;
+        tolayer5(B,pkt_A.payload);
+        prevSeq = pkt_A.seqnum;
       }
-    tolayer3(B,packet);
+    tolayer3(B,pkt_A);
     }
   }
 }
@@ -68,12 +71,13 @@ void B_init() {
   prevSeq = 1;
 }
 
-bool isCorrupted(struct pkt packet){
+bool isCorrupted(struct pkt pkt_A){
   int sum = 0;
-  for(int i = 0; i < strlen(packet.payload);i++){
-    sum += packet.payload[i];
+  for(int i = 0; pkt_A.payload[i] != '\0' ;i++){
+    sum += pkt_A.payload[i];
   }
-  if(sum != packet.checksum){
+
+  if(sum != pkt_A.checksum){
     return true;
   }
   return false;
